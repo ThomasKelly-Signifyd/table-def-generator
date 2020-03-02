@@ -23,22 +23,29 @@ def main(sample_table_data_filename, new_table_def_filename):
             print(f'{{"name" : "{column}", "type" : "varchar(256)"}}')
             lines += f'{{"name" : "{column}", "type" : "varchar(256)"}}'
             no_varchar += 1
-            total += 1
         elif isinstance(df[column].values[0], float):
             print(f'{{"name" : "{column}", "type" : "double precision"}}')
             lines += f'{{"name" : "{column}", "type" : "double precision"}}'
             no_double += 1
-            total += 1
         elif df[column].values == True or df[column].values == False:
             print(f'{{"name" : "{column}", "type" : "boolean"}}')
             lines += f'{{"name" : "{column}", "type" : "boolean"}}'
             no_bool += 1
-            total += 1
         else:
-            print(f'{{"name" : "{column}", "type" : "varchar(256)"}}')
-            lines += f'{{"name" : "{column}", "type" : "varchar(256)"}}'
+            if len(df[column].values[0]) < 256:
+                print(f'{{"name" : "{column}", "type" : "varchar(256)"}}')
+                lines += f'{{"name" : "{column}", "type" : "varchar(256)"}}'
+            elif len(df[column].values[0]) < 1024:
+                print(f'{{"name" : "{column}", "type" : "varchar(1024)"}}')
+                lines += f'{{"name" : "{column}", "type" : "varchar(1024)"}}'
+            elif len(df[column].values[0]) < 8192:
+                print(f'{{"name" : "{column}", "type" : "varchar(8192)"}}')
+                lines += f'{{"name" : "{column}", "type" : "varchar(8192)"}}'
+            else:
+                print(f'{{"name" : "{column}", "type" : "varchar(max)"}}')
+                lines += f'{{"name" : "{column}", "type" : "varchar(max)"}}'
             no_varchar += 1
-            total += 1
+        total += 1
 
         if total != len(df.columns):
             lines += ","
