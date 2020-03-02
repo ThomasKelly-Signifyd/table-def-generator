@@ -8,4 +8,4 @@ SAMPLE_TABLE_DATA_FILENAME:
 
 NEW_TABLE_DEF_FILENAME:
     NEW_TABLE_DEF_FILENAME = "generated_table_defs/account.json"
-    The name of the file you want to create. This should be called "<table name>.json"
+    The name of the file you want to create. This should be called "{table_name}.json"
