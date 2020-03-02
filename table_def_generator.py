@@ -1,6 +1,7 @@
 import json
 
 import pandas as pd
+import math
 
 SAMPLE_TABLE_DATA_FILENAME = "sample_table_data_account.json"
 NEW_TABLE_DEF_FILENAME = "generated_table_defs/account.json"
@@ -11,6 +12,7 @@ def main(sample_table_data_filename, new_table_def_filename):
         data_list = json.load(f)
 
     df = pd.DataFrame(data_list, index=[0])
+    df_length = len(df.columns)
 
     no_varchar = 0
     no_bool = 0
@@ -19,6 +21,17 @@ def main(sample_table_data_filename, new_table_def_filename):
 
     lines = "["
     for column in df:
+        # ensure data is not nested.
+        # (will be in the dataframe as NaN if so)
+        try:
+            if math.isnan(df[column].values[0]):
+                print(df[column].values[0])
+                df_length -= 1
+                continue
+        except:
+            pass
+        
+        # decide which data type to set the field as
         if df[column].values == None:
             print(f'{{"name" : "{column}", "type" : "varchar(256)"}}')
             lines += f'{{"name" : "{column}", "type" : "varchar(256)"}}'
@@ -32,6 +45,7 @@ def main(sample_table_data_filename, new_table_def_filename):
             lines += f'{{"name" : "{column}", "type" : "boolean"}}'
             no_bool += 1
         else:
+            # decide what lenth of varchar the field should be
             if len(df[column].values[0]) < 256:
                 print(f'{{"name" : "{column}", "type" : "varchar(256)"}}')
                 lines += f'{{"name" : "{column}", "type" : "varchar(256)"}}'
@@ -47,7 +61,7 @@ def main(sample_table_data_filename, new_table_def_filename):
             no_varchar += 1
         total += 1
 
-        if total != len(df.columns):
+        if total != df_length:
             lines += ","
 
     lines += "]"
