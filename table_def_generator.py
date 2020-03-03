@@ -11,7 +11,7 @@ def main(sample_table_data_filename, new_table_def_filename):
     with open(sample_table_data_filename) as f:
         data_list = json.load(f)
 
-    df = pd.DataFrame(data_list, index=[0])
+    df = pd.DataFrame(data_list)
     df_length = len(df.columns)
 
     no_varchar = 0
@@ -20,49 +20,55 @@ def main(sample_table_data_filename, new_table_def_filename):
     total = 0
 
     lines = "["
-    for column in df:
-        # ensure data is not nested.
-        # (will be in the dataframe as NaN if so)
-        try:
-            if math.isnan(df[column].values[0]):
-                print(df[column].values[0])
-                df_length -= 1
-                continue
-        except:
-            pass
-        
-        # decide which data type to set the field as
-        if df[column].values == None:
-            print(f'{{"name" : "{column}", "type" : "varchar(256)"}}')
-            lines += f'{{"name" : "{column}", "type" : "varchar(256)"}}'
-            no_varchar += 1
-        elif isinstance(df[column].values[0], float):
-            print(f'{{"name" : "{column}", "type" : "double precision"}}')
-            lines += f'{{"name" : "{column}", "type" : "double precision"}}'
-            no_double += 1
-        elif df[column].values == True or df[column].values == False:
-            print(f'{{"name" : "{column}", "type" : "boolean"}}')
-            lines += f'{{"name" : "{column}", "type" : "boolean"}}'
-            no_bool += 1
-        else:
-            # decide what lenth of varchar the field should be
-            if len(df[column].values[0]) < 256:
-                print(f'{{"name" : "{column}", "type" : "varchar(256)"}}')
-                lines += f'{{"name" : "{column}", "type" : "varchar(256)"}}'
-            elif len(df[column].values[0]) < 1024:
-                print(f'{{"name" : "{column}", "type" : "varchar(1024)"}}')
-                lines += f'{{"name" : "{column}", "type" : "varchar(1024)"}}'
-            elif len(df[column].values[0]) < 8192:
-                print(f'{{"name" : "{column}", "type" : "varchar(8192)"}}')
-                lines += f'{{"name" : "{column}", "type" : "varchar(8192)"}}'
-            else:
-                print(f'{{"name" : "{column}", "type" : "varchar(max)"}}')
-                lines += f'{{"name" : "{column}", "type" : "varchar(max)"}}'
-            no_varchar += 1
-        total += 1
 
-        if total != df_length:
-            lines += ","
+    for column in df:
+        data_type = "varchar(256)"
+        data_length = 256
+
+        for value in df[column]:
+            if isinstance(value, float):
+                data_type = "double precision"
+                no_double += 1
+                data_length = 0
+                break
+            elif value == True or value == False:
+                data_type = "boolean"
+                no_bool += 1
+                data_length = 0
+                break
+            if isinstance(value, dict):
+                data_type = "nested json"
+                data_length = 0
+                break
+            else:
+                try:
+                    if len(value) > data_length:
+                        data_length = len(value)
+                except:
+                    pass
+        
+        if data_length == 0:
+            pass
+        elif data_length <= 256:
+            data_type = "varchar(256)"
+            no_varchar += 1
+        elif data_length < 1024:
+            data_type = "varchar(1024)"
+            no_varchar += 1
+        elif data_length < 4096:
+            data_type = "varchar(4096)"
+            no_varchar += 1
+        elif data_length < 8192:
+            data_type = "varchar(8192)"
+            no_varchar += 1
+        else:
+            data_type = "varchar(max)"
+            no_varchar += 1
+
+        print(data_type)
+        if data_type != "nested json":
+            lines += f'{{"name" : "{column}", "type" : "{data_type}"}},'
+            total += 1
 
     lines += "]"
 
