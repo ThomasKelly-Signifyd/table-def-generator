@@ -3,7 +3,7 @@ import json
 import pandas as pd
 import math
 
-TABLE_NAME = "account"  # modify this line. should be the name of your table
+TABLE_NAME = "task"  # modify this line. should be the name of your table
 SAMPLE_TABLE_DATA_FILENAME = f"sample_table_data/{TABLE_NAME}.json"
 NEW_TABLE_DEF_FILENAME = f"generated_table_defs/{TABLE_NAME}.json"
 
@@ -66,7 +66,7 @@ def main(sample_table_data_filename, new_table_def_filename):
             data_type = "varchar(max)"
             no_varchar += 1
 
-        print(data_type)
+        print(f"{column} --> {data_type}")
         if data_type != "nested json":
             lines += f'{{"name" : "{column}", "type" : "{data_type}"}},'
             total += 1
@@ -74,7 +74,7 @@ def main(sample_table_data_filename, new_table_def_filename):
     lines += "]"
 
     print(
-        f"{total} datatypes set:\n-- {no_varchar} varchars\n-- {no_bool} booleans\n-- {no_double} doubles\n\n"
+        f"\n{total} datatypes set:\n-- {no_varchar} varchars\n-- {no_bool} booleans\n-- {no_double} doubles\n\n"
     )
 
     with open(new_table_def_filename, "w") as f:

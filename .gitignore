@@ -130,3 +130,6 @@ dmypy.json
 
 # vscode
 .vscode/
+
+# system cache
+.DS_Store

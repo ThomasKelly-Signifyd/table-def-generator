@@ -1,5 +1,16 @@
 Create table definitions for a Salesforce table based on the types of data in the fields
 
+To Run:
+
+- Open in the IDE of your choice
+
+- pipenv shell
+
+- python table_def_generator.py
+
+NOTE: When the script runs, it will place an unnecessary comma at the end of the file
+
+
 TABLE_NAME
     e.g. TABLE_NAME = "account.json"
     The name of your table. You must have some sample data for this table so that the script can create a table definition.
