@@ -3,8 +3,9 @@ import json
 import pandas as pd
 import math
 
-SAMPLE_TABLE_DATA_FILENAME = "sample_table_data_account.json"
-NEW_TABLE_DEF_FILENAME = "generated_table_defs/account.json"
+TABLE_NAME = "account"  # modify this line. should be the name of your table
+SAMPLE_TABLE_DATA_FILENAME = f"sample_table_data/{TABLE_NAME}.json"
+NEW_TABLE_DEF_FILENAME = f"generated_table_defs/{TABLE_NAME}.json"
 
 
 def main(sample_table_data_filename, new_table_def_filename):
