@@ -131,5 +131,6 @@ dmypy.json
 # vscode
 .vscode/
 
-# system cache
+# system files
 .DS_Store
+.python-version
