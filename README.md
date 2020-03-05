@@ -8,21 +8,18 @@ To Run:
 
 - python table_def_generator.py
 
-NOTE: When the script runs, it will place an unnecessary comma at the end of the file
 
+TABLE_NAMES
+    e.g. TABLE_NAMES = ["account.json", "campaign.json",...]
+    A list of names of tables. You must have some sample data for these tables so that the script can create a table definition for each.
 
-TABLE_NAME
-    e.g. TABLE_NAME = "account.json"
-    The name of your table. You must have some sample data for this table so that the script can create a table definition.
-
-SAMPLE_TABLE_DATA_FILENAME:
-    e.g. SAMPLE_TABLE_DATA_FILENAME = "{TABLE_NAME}.json"
+sample_table_data_filename:
     This should be rows of the JSON returned from Salesforce using the Salesforce - Redshift ETL
-    It is recommended to have 500 to 1000 rows of data so the program can have the best chance of getting the correct column data types
+    It is recommended to have 1000+ rows of data so the program can have the best chance of getting the correct column data types
+        NOTE: the sample files included are 1000 lines each
     When you download the JSON from S3 add "[" at the start of the JSON, "," at the end of each line and "]" at the end of the file
     File format should be:
         "[{"id":"0011N000017IjKXQA0"...},{"id":"0011N000017IjKXQA0"...}]"
 
-NEW_TABLE_DEF_FILENAME:
-    NEW_TABLE_DEF_FILENAME = "generated_table_defs/{TABLE_NAME}.json"
-    The name of the file you want to create. This will use the TABLE_NAME string and be called "{TABLE_NAME}.json"
+new_table_def_filename:
+    The name of the file you want to create. This will use the table_name string and be called "{table_name}.json"
