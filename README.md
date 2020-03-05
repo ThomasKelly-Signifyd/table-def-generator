@@ -9,6 +9,14 @@ To Run:
 - python table_def_generator.py
 
 
+Info:
+- Will create a file with JSON schema to create table in Redshift for each table name which is passed into TABLE_NAMES
+
+- Will create a file columns_with_unknown_types which contains any columns where there was no data for the script to guess the datatype. These are set to varchar(256)
+
+
+Additional Info:
+
 TABLE_NAMES
     e.g. TABLE_NAMES = ["account.json", "campaign.json",...]
     A list of names of tables. You must have some sample data for these tables so that the script can create a table definition for each.

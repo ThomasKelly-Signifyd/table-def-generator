@@ -29,8 +29,8 @@ def generate_table_defs(table_name, list_column_names, list_column_types):
 
     columns_counted = 0
     for column in df:
-        data_type = "varchar(20)"
-        data_length = 20
+        data_type = "unknown"
+        data_length = 0
 
         for value in df[column]:
             if isinstance(value, float):
@@ -40,6 +40,10 @@ def generate_table_defs(table_name, list_column_names, list_column_types):
                     or "time" in column
                     or "since" in column
                     or "_at_" in column
+                    or "last_modified" in column
+                    or "most_recent" in column
+                    or "last_clean_run" in column
+                    or "updated" in column
                 ):
                     data_type = "timestamp"
                     data_length = 0
@@ -102,6 +106,10 @@ def generate_table_defs(table_name, list_column_names, list_column_types):
                         data_type = list_column_types[i]
                     elif data_type == "timestamp" and "date" in column:
                         list_column_types[i] = data_type
+                    elif data_type == "unknown" and list_column_types[i] != "unknown":
+                        data_type = list_column_types[i]
+                    elif list_column_types[i] == "unknown" and data_type != "unknown":
+                        list_column_types[i] = data_type
                     else:
                         print(f"--- SELECT TYPE FOR {column}:")
                         user_selection = int(input(f"Which is correct? 1.{list_column_types[i]} or 2.{data_type}? "))
@@ -129,6 +137,7 @@ def write_table_defs(table_name, list_column_names, list_column_types):
     no_bool = 0
     no_double = 0
     no_timestamp = 0
+    no_unknown = 0
     total = 0
 
     lines = "["
@@ -147,6 +156,14 @@ def write_table_defs(table_name, list_column_names, list_column_types):
                     no_timestamp += 1
                 elif data_type == "boolean":
                     no_bool += 1
+                elif data_type == "unknown":
+                    if "date" in column:
+                        data_type = "timestamp"
+                        list_column_types[i] = data_type
+                        no_timestamp += 1
+                    else:
+                        data_type = "varchar(256)"
+                        no_unknown += 1
             i += 1
                 
         columns_counted += 1
@@ -160,8 +177,12 @@ def write_table_defs(table_name, list_column_names, list_column_types):
     lines += "]"
 
     print(
-        f"\n{total} datatypes set for {table_name}:\n-- {no_varchar} varchars\n-- {no_bool} booleans\n-- {no_timestamp} timestamps\n-- {no_double} doubles\n\n"
+        f"\n{total} datatypes set for {table_name}:\n-- {no_varchar} varchars\n-- {no_bool} booleans\n-- {no_timestamp} timestamps\n-- {no_double} doubles"
     )
+    if no_unknown != 0:
+        print(f"-- {no_unknown} unknowns (these have been set to varchar(256))\n\n")
+    else:
+        print("-- 0 unknowns\n\n")
 
     with open(new_table_def_filename, "w") as f:
         f.writelines(lines)
@@ -176,3 +197,13 @@ if __name__ == "__main__":
 
     for table_name in TABLE_NAMES:
         write_table_defs(table_name, list_column_names, list_column_types)
+
+    i = 0
+    lines = []
+    for value in list_column_names:
+        if list_column_types[i] == "unknown":
+            lines.append(list_column_names[i] + "\n")
+        i += 1
+
+    with open("columns_with_unknown_types.txt", "w") as f:
+        f.writelines(lines)
