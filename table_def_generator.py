@@ -1,18 +1,19 @@
 import json
 
 import pandas as pd
-import math
 
-TABLE_NAMES = ['Account',
-          'Campaign',
-          'CampaignMember',
-          'Contact',
-          'Lead',
-          'Opportunity',
-          'OpportunityContactRole',
-          'OpportunityHistory',
-          'Task',
-          'User']
+TABLE_NAMES = [
+    "Account",
+    "Campaign",
+    "CampaignMember",
+    "Contact",
+    "Lead",
+    "Opportunity",
+    "OpportunityContactRole",
+    "OpportunityHistory",
+    "Task",
+    "User",
+]
 
 
 def generate_table_defs(table_name):
@@ -40,7 +41,13 @@ def generate_table_defs(table_name):
 
         for value in df[column]:
             if isinstance(value, float):
-                if len(str(value)) >= 10 and ("date" in column or "stamp" in column or "time" in column or "since" in column or "_at_" in column):
+                if len(str(value)) >= 10 and (
+                    "date" in column
+                    or "stamp" in column
+                    or "time" in column
+                    or "since" in column
+                    or "_at_" in column
+                ):
                     data_type = "timestamp"
                     no_timestamp += 1
                     data_length = 0
@@ -65,7 +72,7 @@ def generate_table_defs(table_name):
                         data_length = len(value)
                 except:
                     pass
-        
+
         if data_length == 0:
             pass
         elif data_length <= 20:
