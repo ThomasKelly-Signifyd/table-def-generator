@@ -24,7 +24,7 @@ TABLE_NAMES
 sample_table_data_filename:
     This should be rows of the JSON returned from Salesforce using the Salesforce - Redshift ETL
     It is recommended to have 1000+ rows of data so the program can have the best chance of getting the correct column data types
-        NOTE: the sample files included are 1000 lines each
+        NOTE: the sample files included are 10 lines each and are only to show how the file should look
     When you download the JSON from S3 add "[" at the start of the JSON, "," at the end of each line and "]" at the end of the file
     File format should be:
         "[{"id":"0011N000017IjKXQA0"...},{"id":"0011N000017IjKXQA0"...}]"

@@ -7,12 +7,12 @@ TABLE_NAMES = [
     "Campaign",
     "CampaignMember",
     "Contact",
-    "Lead",
-    "Opportunity",
-    "OpportunityContactRole",
-    "OpportunityHistory",
-    "Task",
-    "User",
+    # "Lead",
+    # "Opportunity",
+    # "OpportunityContactRole",
+    # "OpportunityHistory",
+    # "Task",
+    # "User",
 ]
 
 
@@ -52,7 +52,11 @@ def generate_table_defs(table_name, list_column_names, list_column_types):
                     data_type = "double precision"
                     data_length = 0
                     break
-            elif value == True or value == False:
+            elif isinstance(value, int) and value not in [0, 1]:
+                data_type = "integer"
+                data_length = 0
+                break
+            elif str(value) == "True" or str(value) == "False":
                 data_type = "boolean"
                 data_length = 0
                 break
@@ -137,6 +141,7 @@ def write_table_defs(table_name, list_column_names, list_column_types):
     no_bool = 0
     no_double = 0
     no_timestamp = 0
+    no_integer = 0
     no_unknown = 0
     total = 0
 
@@ -156,6 +161,8 @@ def write_table_defs(table_name, list_column_names, list_column_types):
                     no_timestamp += 1
                 elif data_type == "boolean":
                     no_bool += 1
+                elif data_type == "integer":
+                    no_integer += 1
                 elif data_type == "unknown":
                     if "date" in column:
                         data_type = "timestamp"
@@ -177,7 +184,7 @@ def write_table_defs(table_name, list_column_names, list_column_types):
     lines += "]"
 
     print(
-        f"\n{total} datatypes set for {table_name}:\n-- {no_varchar} varchars\n-- {no_bool} booleans\n-- {no_timestamp} timestamps\n-- {no_double} doubles"
+        f"\n{total} datatypes set for {table_name}:\n-- {no_varchar} varchars\n-- {no_bool} booleans\n-- {no_timestamp} timestamps\n-- {no_double} doubles\n-- {no_integer} integers"
     )
     if no_unknown != 0:
         print(f"-- {no_unknown} unknowns (these have been set to varchar(256))\n\n")
