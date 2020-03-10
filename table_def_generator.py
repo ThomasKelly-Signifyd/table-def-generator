@@ -1,18 +1,19 @@
 import json
+import os
 
 import pandas as pd
 
 TABLE_NAMES = [
     "Account",
     "Campaign",
-    "CampaignMember",
-    "Contact",
-    "Lead",
-    "Opportunity",
-    "OpportunityContactRole",
-    "OpportunityHistory",
-    "Task",
-    "User",
+    # "CampaignMember",
+    # "Contact",
+    # "Lead",
+    # "Opportunity",
+    # "OpportunityContactRole",
+    # "OpportunityHistory",
+    # "Task",
+    # "User",
 ]
 
 
@@ -20,7 +21,27 @@ def generate_table_defs(table_name, list_column_names, list_column_types):
     sample_table_data_filename = f"sample_table_data/{table_name.lower()}.json"
 
     with open(sample_table_data_filename) as f:
-        data_list = json.load(f)
+        no_lines = 0
+        for line in f:
+            no_lines += 1
+        print(f"{no_lines} lines in {table_name}\n -- Creating temp file with valid JSON (this could take several minutes)")
+
+    with open(sample_table_data_filename) as f:
+        valid_json = "["
+        count = 0
+        for line in f:
+            if count < no_lines-1:
+                line = line.replace(line[-1], ",\n")
+                valid_json += line
+            else:
+                valid_json += f"{line}]"
+            count += 1
+
+    with open(f"temp_valid_json_{table_name.lower()}.json", "w") as f:
+        f.write(valid_json)
+            
+    with open(f"temp_valid_json_{table_name.lower()}.json") as f:
+        data_list = json.loads(valid_json)
 
     df = pd.DataFrame(data_list)
     df_length = len(df.columns)
@@ -52,10 +73,18 @@ def generate_table_defs(table_name, list_column_names, list_column_types):
                     data_type = "double precision"
                     data_length = 0
                     break
-            elif value == True or value == False:
+            elif column == "firstname" or column == "lastname" or column == "zi_company_name__c":
+                data_length = 255
+                break
+            elif isinstance(value, int) and value not in [0, 1]:
+                data_type = "integer"
+                data_length = 0
+                break
+            elif str(value) == "True" or str(value) == "False":
                 data_type = "boolean"
                 data_length = 0
                 break
+
             if isinstance(value, dict):
                 data_type = "nested json"
                 data_length = 0
@@ -95,6 +124,8 @@ def generate_table_defs(table_name, list_column_names, list_column_types):
                     elif "varchar" in list_column_types[i] and "varchar" in data_type:
                         if list_column_types[i] == "varchar(max)":
                             data_type = list_column_types[i]
+                        elif data_type == "varchar(max)":
+                            list_column_types[i] = data_type
                         else:
                             listed_length = list_column_types[i].replace("varchar(", "")
                             listed_length = int(listed_length.replace(")", ""))
@@ -123,11 +154,11 @@ def generate_table_defs(table_name, list_column_names, list_column_types):
             list_column_types.append(data_type)
 
 
-def write_table_defs(table_name, list_column_names, list_column_types):
+def write_table_defs(table_name, list_column_names, list_column_types, list_unknowns):
     sample_table_data_filename = f"sample_table_data/{table_name.lower()}.json"
     new_table_def_filename = f"generated_table_defs/{table_name.lower()}.json"
 
-    with open(sample_table_data_filename) as f:
+    with open(f"temp_valid_json_{table_name.lower()}.json") as f:
         data_list = json.load(f)
 
     df = pd.DataFrame(data_list)
@@ -137,7 +168,8 @@ def write_table_defs(table_name, list_column_names, list_column_types):
     no_bool = 0
     no_double = 0
     no_timestamp = 0
-    no_unknown = 0
+    no_integer = 0
+    no_unknowns = 0
     total = 0
 
     lines = "["
@@ -156,16 +188,22 @@ def write_table_defs(table_name, list_column_names, list_column_types):
                     no_timestamp += 1
                 elif data_type == "boolean":
                     no_bool += 1
+                elif data_type == "integer":
+                    no_integer += 1
                 elif data_type == "unknown":
-                    if "date" in column:
+                    if "date" in column and "_to_date" not in column:
                         data_type = "timestamp"
                         list_column_types[i] = data_type
                         no_timestamp += 1
                     else:
                         data_type = "varchar(256)"
-                        no_unknown += 1
+                        list_column_types[i] = data_type
+                        no_varchar += 1
+                        no_unknowns += 1
+                        if column not in list_unknowns:
+                            list_unknowns.append(f"{column}\n")
             i += 1
-                
+
         columns_counted += 1
         print(f"{column} --> {data_type}")
         if data_type != "nested json":
@@ -177,12 +215,12 @@ def write_table_defs(table_name, list_column_names, list_column_types):
     lines += "]"
 
     print(
-        f"\n{total} datatypes set for {table_name}:\n-- {no_varchar} varchars\n-- {no_bool} booleans\n-- {no_timestamp} timestamps\n-- {no_double} doubles"
+        f"\n{total} datatypes set for {table_name}:\n-- {no_varchar} varchars\n-- {no_bool} booleans\n-- {no_timestamp} timestamps\n-- {no_double} doubles\n-- {no_integer} integers"
     )
-    if no_unknown != 0:
-        print(f"-- {no_unknown} unknowns (these have been set to varchar(256))\n\n")
+    if no_unknowns != 0:
+        print(f"-- {no_unknowns} unknowns (these have been set to varchar(256))\n\n")
     else:
-        print("-- 0 unknowns\n\n")
+        print("-- 0 unknowns\n\n") 
 
     with open(new_table_def_filename, "w") as f:
         f.writelines(lines)
@@ -191,19 +229,16 @@ def write_table_defs(table_name, list_column_names, list_column_types):
 if __name__ == "__main__":
     list_column_names = []
     list_column_types = []
+    list_unknowns = []
 
     for table_name in TABLE_NAMES:
         generate_table_defs(table_name, list_column_names, list_column_types)
 
     for table_name in TABLE_NAMES:
-        write_table_defs(table_name, list_column_names, list_column_types)
-
-    i = 0
-    lines = []
-    for value in list_column_names:
-        if list_column_types[i] == "unknown":
-            lines.append(list_column_names[i] + "\n")
-        i += 1
+        write_table_defs(table_name, list_column_names, list_column_types, list_unknowns)
+        os.remove(f"temp_valid_json_{table_name.lower()}.json")
 
     with open("columns_with_unknown_types.txt", "w") as f:
-        f.writelines(lines)
+        f.writelines(list_unknowns)
+
+    print("DONE.\nYou can find the generated table definitions under generated_table_defs/")
